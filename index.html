@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="SplicEd: guided lessons and procedural practice for electrical splices and joints."
+    >
+
+    <title>SplicEd — Electrical Splices & Joints</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+
+    <!-- AUTHENTICATION -->
+
+    <main id="authPage" class="auth-page">
+        <section class="auth-intro">
+            <a class="brand" href="#">
+                <span class="brand-mark">S</span>
+                <span>Splic<span class="copper-text">Ed</span></span>
+            </a>
+
+            <span class="eyebrow">INDUSTRIAL ARTS • ELECTRICAL LEARNING</span>
+
+            <h1>
+                Understand the steps.
+                <span>Build the connection.</span>
+            </h1>
+
+            <p>
+                Learn electrical splices and joints through visual lessons,
+                guided practice, sequencing activities, and module assessments.
+            </p>
+
+            <div class="auth-diagram">
+                <div class="panel-heading">
+                    <span>THE WORKBENCH</span>
+                    <span>Splices & Joints</span>
+                </div>
+
+                <div id="authDiagram"></div>
+
+                <p class="small-text">
+                    Observe the procedure. Practice the order.
+                    Review what needs more attention.
+                </p>
+            </div>
+
+            <!--
+                OPTIONAL CUSTOM ANIMATION:
+
+                Replace the auth-diagram above with your animation if needed.
+
+                <video controls muted playsinline preload="none">
+                    <source src="your-animation.mp4" type="video/mp4">
+                </video>
+            -->
+        </section>
+
+        <section class="auth-card">
+            <span class="eyebrow">LEARNER ACCESS</span>
+            <h2>Welcome to SplicEd</h2>
+
+            <p class="muted">
+                Sign in to continue your saved learning progress.
+            </p>
+
+            <div class="auth-tabs">
+                <button
+                    id="loginTab"
+                    class="auth-tab active"
+                    type="button"
+                    onclick="showAuthForm('login')"
+                >
+                    Log In
+                </button>
+
+                <button
+                    id="registerTab"
+                    class="auth-tab"
+                    type="button"
+                    onclick="showAuthForm('register')"
+                >
+                    Register
+                </button>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <label for="loginUsername">Username</label>
+                <input
+                    id="loginUsername"
+                    name="username"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="loginPassword">Password</label>
+
+                <div class="password-field">
+                    <input
+                        id="loginPassword"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <button
+                        class="password-toggle"
+                        type="button"
+                        aria-label="Show password"
+                        onclick="togglePassword('loginPassword', this)"
+                    >
+                        Show
+                    </button>
+                </div>
+
+                <button
+                    class="text-button"
+                    type="button"
+                    onclick="forgotPassword()"
+                >
+                    Forgot password?
+                </button>
+
+                <button class="primary full-width" type="submit">
+                    Log In →
+                </button>
+
+                <p id="loginMessage" class="form-message" role="status"></p>
+            </form>
+
+            <form
+                id="registerForm"
+                onsubmit="handleRegister(event)"
+                hidden
+            >
+                <div class="form-grid">
+                    <div>
+                        <label for="registerUsername">Preferred username</label>
+                        <input
+                            id="registerUsername"
+                            autocomplete="username"
+                            minlength="3"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="confirmUsername">Confirm username</label>
+                        <input
+                            id="confirmUsername"
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="registerPassword">Preferred password</label>
+                        <input
+                            id="registerPassword"
+                            type="password"
+                            autocomplete="new-password"
+                            minlength="6"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="confirmPassword">Confirm password</label>
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            autocomplete="new-password"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <label for="gender">Gender</label>
+                <select id="gender" required>
+                    <option value="">Select an option</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Non-binary</option>
+                    <option>Prefer to self-describe</option>
+                    <option>Prefer not to say</option>
+                </select>
+
+                <label for="personalEmail">Personal email</label>
+                <input
+                    id="personalEmail"
+                    type="email"
+                    autocomplete="email"
+                    required
+                >
+
+                <button class="primary full-width" type="submit">
+                    Create Account →
+                </button>
+
+                <p id="registerMessage" class="form-message" role="status"></p>
+            </form>
+
+            <p class="small-text auth-note">
+                Browser-only learning prototype. Use a demo password.
+                Accounts and progress are stored on this browser.
+            </p>
+        </section>
+    </main>
+
+    <!-- MAIN APPLICATION -->
+
+    <div id="mainApplication" hidden>
+
+        <header class="navbar">
+            <button
+                class="brand brand-button"
+                type="button"
+                onclick="navigate('home')"
+                aria-label="SplicEd home"
+            >
+                <span class="brand-mark">S</span>
+                <span>Splic<span class="copper-text">Ed</span></span>
+            </button>
+
+            <nav aria-label="Main navigation">
+                <button data-page="home" onclick="navigate('home')">
+                    Home
+                </button>
+
+                <button data-page="learn" onclick="navigate('learn')">
+                    Learn
+                </button>
+
+                <button data-page="practice" onclick="navigate('practice')">
+                    Practice
+                </button>
+
+                <button data-page="practice" onclick="startNextPractice(selectedModule)">
+                    Guided Order
+                </button>
+
+                <button data-page="challenge" onclick="navigate('challenge')">
+                    Challenge
+                </button>
+
+                <button data-page="assessment" onclick="navigate('assessment')">
+                    Assessment
+                </button>
+
+                <button data-page="progress" onclick="navigate('progress')">
+                    Progress
+                </button>
+
+                <button data-page="about" onclick="navigate('about')">
+                    About Us
+                </button>
+            </nav>
+
+            <div class="account-menu">
+                <span id="userLabel"></span>
+                <button class="secondary small-button" onclick="logout()">
+                    Log Out
+                </button>
+            </div>
+        </header>
+
+        <main class="app-content">
+
+            <!-- HOME -->
+
+            <section id="home" class="page active">
+                <div class="home-layout">
+                    <div class="hero-copy">
+                        <span class="eyebrow">
+                            GAMIFIED WEB-BASED LEARNING SYSTEM
+                        </span>
+
+                        <h1>
+                            Understand the steps.
+                            <span>Master the procedure.</span>
+                        </h1>
+
+                        <p>
+                            SplicEd supports procedural understanding of
+                            electrical splices and joints through structured
+                            lessons, visual demonstrations, guided sequencing,
+                            feedback, and repeated practice.
+                        </p>
+
+                        <div class="button-row">
+                            <button
+                                class="primary"
+                                onclick="navigate('learn')"
+                            >
+                                Start Learning →
+                            </button>
+
+                            <button
+                                class="secondary"
+                                onclick="showHowItWorks()"
+                            >
+                                How It Works
+                            </button>
+                        </div>
+
+                        <div class="home-facts">
+                            <div><strong>8</strong><span>Learning modules</span></div>
+                            <div><strong>47</strong><span>Guided steps</span></div>
+                            <div><strong>80</strong><span>Assessment items</span></div>
+                        </div>
+                    </div>
+
+                    <article class="workbench-card">
+                        <div class="panel-heading">
+                            <span>PROCEDURAL WORKBENCH</span>
+                            <span>Module Preview</span>
+                        </div>
+
+                        <div id="homeDiagram"></div>
+
+                        <div class="workbench-caption">
+                            <span class="eyebrow">WESTERN UNION SHORT-TIE</span>
+                            <h2>See how each step connects.</h2>
+                            <p>
+                                Compare the visual with the instruction,
+                                then practice the correct order.
+                            </p>
+                        </div>
+                    </article>
+                </div>
+
+                <div id="howItWorks" class="how-grid" hidden>
+                    <article class="panel">
+                        <span class="step-number">01</span>
+                        <h3>Read & Observe</h3>
+                        <p>Study the lesson, diagrams, and related tutorial.</p>
+                    </article>
+
+                    <article class="panel">
+                        <span class="step-number">02</span>
+                        <h3>Practice the Order</h3>
+                        <p>Answer what comes next, then arrange the complete sequence.</p>
+                    </article>
+
+                    <article class="panel">
+                        <span class="step-number">03</span>
+                        <h3>Assess & Review</h3>
+                        <p>Take the module assessment and revisit difficult steps.</p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- LEARN -->
+
+            <section id="learn" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">THE LEARNING BENCH</span>
+                    <h1>Electrical Splices & Joints</h1>
+                    <p>
+                        Open a module to study its purpose, procedure,
+                        visual diagrams, and quality checks.
+                    </p>
+                </div>
+
+                <div id="lessonCards" class="lesson-grid"></div>
+                <div id="lessonViewer" hidden></div>
+            </section>
+
+            <!-- PRACTICE -->
+
+            <section id="practice" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">OBSERVE • REPLAY • UNDERSTAND</span>
+                    <h1>Guided Practice</h1>
+                    <p>
+                        Study one action at a time.
+                        Save difficult steps to your review list.
+                    </p>
+                </div>
+
+                <div id="practiceContent"></div>
+            </section>
+
+            <!-- WHAT COMES NEXT -->
+
+            <section id="nextPractice" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">GUIDED ORDERING</span>
+                    <h1>What Comes Next?</h1>
+                    <p>
+                        Practice the connection between steps before arranging
+                        the full procedure independently.
+                    </p>
+                </div>
+
+                <div id="nextPracticeContent"></div>
+            </section>
+
+            <!-- SEQUENCING -->
+
+            <section id="challenge" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">INDEPENDENT SEQUENCING</span>
+                    <h1>Arrange the Procedure</h1>
+                    <p>
+                        Drag the steps, use the arrow buttons, or select two
+                        step titles to swap their positions.
+                    </p>
+                </div>
+
+                <div id="challengeContent"></div>
+            </section>
+
+            <!-- ASSESSMENT -->
+
+            <section id="assessment" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">CHECK YOUR UNDERSTANDING</span>
+                    <h1>Module Assessment</h1>
+                    <p>
+                        Each module contains 10 multiple-choice questions.
+                        The target score is 8 out of 10.
+                    </p>
+                </div>
+
+                <div id="quizBox" class="panel"></div>
+            </section>
+
+            <!-- PROGRESS -->
+
+            <section id="progress" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">YOUR LEARNING RECORD</span>
+                    <h1>Learning Progress</h1>
+                    <p>
+                        Monitor completed activities, assessment results,
+                        and the steps you want to review.
+                    </p>
+                </div>
+
+                <div id="progressContent"></div>
+            </section>
+
+            <!-- ABOUT US -->
+
+            <section id="about" class="page">
+                <div class="section-heading">
+                    <span class="eyebrow">THE PEOPLE BEHIND SPLICED</span>
+                    <h1>About Us</h1>
+                </div>
+
+                <div class="about-layout">
+                    <article class="panel">
+                        <h2>Learning procedures, one step at a time.</h2>
+
+                        <p>
+                            SplicEd is a gamified web-based learning system
+                            developed by Group 5, BSIE-ICT 4A, at the
+                            Technological University of the Philippines — Manila.
+                        </p>
+
+                        <p>
+                            It supports procedural understanding of electrical
+                            splices and joints through lessons, visual
+                            demonstrations, sequencing practice, feedback,
+                            and module assessments.
+                        </p>
+                    </article>
+
+                    <aside class="group-card">
+                        <span class="eyebrow">DEVELOPED BY</span>
+                        <strong>GROUP 5</strong>
+                        <p>BSIE-ICT 4A</p>
+                        <p>TUP Manila</p>
+                    </aside>
+                </div>
+
+                <section class="team-section">
+                    <h2>Meet the Team</h2>
+
+                    <div class="team-grid">
+                        <article class="team-card leader-card">
+                            <span class="eyebrow">LEADER</span>
+                            <h3>Andrei N. Valentin</h3>
+                        </article>
+
+                        <article class="team-card">
+                            <span class="eyebrow">MEMBER</span>
+                            <h3>Chrizmhelo S. Santos</h3>
+                        </article>
+
+                        <article class="team-card">
+                            <span class="eyebrow">MEMBER</span>
+                            <h3>John Joven C. Baguisa</h3>
+                        </article>
+
+                        <article class="team-card">
+                            <span class="eyebrow">MEMBER</span>
+                            <h3>Mark John G. Valenzuela</h3>
+                        </article>
+
+                        <article class="team-card">
+                            <span class="eyebrow">MEMBER</span>
+                            <h3>Neinard D. Ignacio</h3>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="theory-section">
+                    <span class="eyebrow">THEORY-ALIGNED DESIGN</span>
+                    <h2>Why SplicEd is designed this way</h2>
+
+                    <div class="theory-grid">
+                        <article class="panel">
+                            <span class="step-number">01</span>
+                            <h3>Cognitive Load</h3>
+                            <p>
+                                Procedures are divided into manageable segments
+                                to avoid overwhelming the learner.
+                            </p>
+                        </article>
+
+                        <article class="panel">
+                            <span class="step-number">02</span>
+                            <h3>Multimedia Learning</h3>
+                            <p>
+                                Visual demonstrations are paired with
+                                concise explanations.
+                            </p>
+                        </article>
+
+                        <article class="panel">
+                            <span class="step-number">03</span>
+                            <h3>Scaffolding</h3>
+                            <p>
+                                Learners move from guided demonstration
+                                toward independent practice.
+                            </p>
+                        </article>
+
+                        <article class="panel">
+                            <span class="step-number">04</span>
+                            <h3>Mastery Learning</h3>
+                            <p>
+                                Learners can review procedures, retry activities,
+                                and improve before moving forward.
+                            </p>
+                        </article>
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <footer>
+            <strong>SplicEd</strong>
+            <span>Group 5 • BSIE-ICT 4A • TUP Manila</span>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+
+</body>
+</html>
