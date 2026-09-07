@@ -1546,71 +1546,79 @@ function renderPractice() {
                     <span>I understand and can describe this step.</span>
                 </label>
 
-                <div class="visual-toolbar">
-                    <button class="secondary" onclick="replayVisual()">
-                        ↻ Replay
-                    </button>
+                <section class="practice-section visual-controls-section">
+                    <h3 class="practice-section-title">Visual Controls</h3>
 
-                    <button
-                        id="pauseActionButton"
-                        class="secondary"
-                        aria-pressed="false"
-                        onclick="pauseAction()"
-                    >
-                        Pause Action
-                    </button>
+                    <div class="visual-toolbar">
+                        <button class="secondary" onclick="replayVisual()">
+                            ↻ Replay
+                        </button>
 
-                    <button
-                        id="zoomButton"
-                        class="secondary"
-                        aria-pressed="false"
-                        onclick="toggleZoom()"
-                    >
-                        Close-up
-                    </button>
-
-                    <label class="speed-control" for="motionSpeed">
-                        Speed
-
-                        <select
-                            id="motionSpeed"
-                            onchange="setAnimationSpeed(Number(this.value))"
+                        <button
+                            id="pauseActionButton"
+                            class="secondary"
+                            aria-pressed="false"
+                            onclick="pauseAction()"
                         >
-                            <option
-                                value="0.5"
-                                ${animationSpeed === 0.5 ? "selected" : ""}
+                            Pause Action
+                        </button>
+
+                        <button
+                            id="zoomButton"
+                            class="secondary"
+                            aria-pressed="false"
+                            onclick="toggleZoom()"
+                        >
+                            Close-up
+                        </button>
+
+                        <label class="speed-control" for="motionSpeed">
+                            <span>Speed</span>
+
+                            <select
+                                id="motionSpeed"
+                                onchange="setAnimationSpeed(Number(this.value))"
                             >
-                                0.5×
-                            </option>
+                                <option
+                                    value="0.5"
+                                    ${animationSpeed === 0.5 ? "selected" : ""}
+                                >
+                                    0.5×
+                                </option>
 
-                            <option
-                                value="1"
-                                ${animationSpeed === 1 ? "selected" : ""}
-                            >
-                                1×
-                            </option>
+                                <option
+                                    value="1"
+                                    ${animationSpeed === 1 ? "selected" : ""}
+                                >
+                                    1×
+                                </option>
 
-                            <option
-                                value="1.5"
-                                ${animationSpeed === 1.5 ? "selected" : ""}
-                            >
-                                1.5×
-                            </option>
-                        </select>
-                    </label>
-                </div>
+                                <option
+                                    value="1.5"
+                                    ${animationSpeed === 1.5 ? "selected" : ""}
+                                >
+                                    1.5×
+                                </option>
+                            </select>
+                        </label>
+                    </div>
 
-                <div class="before-after">
-                    <figure>
-                        <figcaption>Before this step</figcaption>
-                        ${wireDiagram(selectedModule, currentStep - 1)}
-                    </figure>
+                    <details class="before-after-details">
+                        <summary>Compare Before and After</summary>
 
-                    <figure>
-                        <figcaption>After this step</figcaption>
-                        ${wireDiagram(selectedModule, currentStep)}
-                    </figure>
-                </div>
+                        <div class="before-after">
+                            <figure>
+                                <figcaption>Before this step</figcaption>
+                                ${wireDiagram(selectedModule, currentStep - 1)}
+                            </figure>
+
+                            <figure>
+                                <figcaption>After this step</figcaption>
+                                ${wireDiagram(selectedModule, currentStep)}
+                            </figure>
+                        </div>
+                    </details>
+                </section>
 
                 <p class="small-text">
                     Schematic training view. Turns and dimensions are illustrative.
@@ -1623,26 +1631,33 @@ function renderPractice() {
                 <h2>${escapeHTML(step[0])}</h2>
                 <p>${escapeHTML(step[1])}</p>
 
-                <button
-                    id="stepHintButton"
-                    class="secondary"
-                    type="button"
-                    onclick="toggleStepHint()"
-                >
-                    Show Hint
-                </button>
+                <section class="practice-section step-guidance">
+                    <h3 class="practice-section-title">Step Guidance</h3>
 
-                <div id="stepHint" class="hint-box" hidden>
-                    <strong>Hint</strong>
-                    <p>${escapeHTML(step[2])}</p>
-                </div>
+                    <button
+                        id="stepHintButton"
+                        class="secondary"
+                        type="button"
+                        onclick="toggleStepHint()"
+                    >
+                        Show Hint
+                    </button>
 
-                <aside class="note">
-                    <strong>Look For</strong>
-                    <p>${escapeHTML(step[2])}</p>
-                </aside>
+                    <div id="stepHint" class="hint-box" hidden>
+                        <strong>Hint</strong>
+                        <p>${escapeHTML(step[2])}</p>
+                    </div>
 
-                <div class="step-list">
+                    <aside class="note">
+                        <strong>Look For</strong>
+                        <p>${escapeHTML(step[2])}</p>
+                    </aside>
+                </section>
+
+                <section class="practice-section step-navigation">
+                    <h3 class="practice-section-title">Step Navigation</h3>
+
+                    <div class="step-list">
                     ${module.steps.map((item, index) => `
                         <button
                             class="step-link ${
@@ -1666,9 +1681,9 @@ function renderPractice() {
                             ${escapeHTML(item[0])}
                         </button>
                     `).join("")}
-                </div>
+                    </div>
 
-                <div class="button-row">
+                    <div class="button-row practice-actions primary-actions">
                     <button
                         class="secondary"
                         onclick="previousStep()"
@@ -1687,29 +1702,42 @@ function renderPractice() {
                             ? "What Comes Next? →"
                             : "Next Step →"}
                     </button>
-                </div>
+                    </div>
 
-                <div class="button-row">
-                    <button
-                        id="playStepsButton"
-                        class="secondary"
-                        aria-pressed="${Boolean(playbackTimer)}"
-                        onclick="togglePlayback()"
-                    >
-                        ${playbackTimer
-                            ? "Pause Auto-play"
-                            : "▶ Auto-play Steps"}
-                    </button>
+                    ${!stepComplete || !safetyAccepted ? `
+                        <p class="small-text action-note">
+                            Complete the safety reminder and step checklist to unlock the next step.
+                        </p>
+                    ` : ""}
+                </section>
 
-                    <button
-                        class="secondary"
-                        onclick="openLesson(${selectedModule})"
-                    >
-                        Read Lesson
-                    </button>
-                </div>
+                <section class="practice-section learning-tools-section">
+                    <h3 class="practice-section-title">Learning Tools</h3>
+
+                    <div class="practice-actions secondary-actions">
+                        <button
+                            id="playStepsButton"
+                            class="secondary"
+                            aria-pressed="${Boolean(playbackTimer)}"
+                            onclick="togglePlayback()"
+                        >
+                            ${playbackTimer
+                                ? "Pause Auto-play"
+                                : "▶ Auto-play Steps"}
+                        </button>
+
+                        <button
+                            class="secondary"
+                            onclick="openLesson(${selectedModule})"
+                        >
+                            Read Lesson
+                        </button>
+                    </div>
+                </section>
 
                 <aside class="step-support">
+                    <h3 class="practice-section-title">Learning Support</h3>
+
                     <button
                         class="secondary"
                         onclick="addReviewStep(
@@ -1724,7 +1752,7 @@ function renderPractice() {
                             : "Need More Practice — Save This Step"}
                     </button>
 
-                    <div class="button-row">
+                    <div class="button-row practice-actions support-actions">
                         <button
                             class="secondary"
                             onclick="startNextPractice(${selectedModule})"
