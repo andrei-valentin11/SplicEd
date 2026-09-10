@@ -484,8 +484,8 @@ const MODULES = [
    APPLICATION STATE
    ========================================================= */
 
-const ACCOUNT_KEY = "splicedUser";
-const ACCOUNTS_KEY = "splicedAccountsV2";
+const PROFILES_KEY = "splicedLearnerProfilesV1";
+const LEGACY_PROFILE_KEYS = ["splicedUser", "splicedAccountsV2"];
 const SESSION_KEY = "splicedSession";
 const PROGRESS_KEY = "splicedProgress";
 
@@ -543,32 +543,87 @@ function progressKey(username) {
     return `${PROGRESS_KEY}_${username.toLowerCase()}`;
 }
 
-function getAccounts() {
-    const stored = readJSON(ACCOUNTS_KEY, []);
+function normalizeProfileName(value) {
+    return String(value || "")
+        .replace(/[\u0000-\u001f\u007f<>]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 40);
+}
 
-    const accounts = Array.isArray(stored)
-        ? stored.filter(user =>
-            user &&
-            typeof user.username === "string" &&
-            typeof user.password === "string"
-        )
-        : [];
+function validProfileName(value) {
+    return value.length >= 2 && value.length <= 40;
+}
 
-    // Read the account used by the previous SplicEd version.
-    const legacy = readJSON(ACCOUNT_KEY);
+function profileFromStored(value) {
+    const candidate = typeof value === "string"
+        ? value
+        : value && typeof value === "object"
+            ? value.username || value.nickname
+            : "";
 
-    if (
-        legacy &&
-        typeof legacy.username === "string" &&
-        typeof legacy.password === "string" &&
-        !accounts.some(user =>
-            user.username.toLowerCase() === legacy.username.toLowerCase()
-        )
-    ) {
-        accounts.push(legacy);
+    const username = normalizeProfileName(candidate);
+
+    return validProfileName(username) ? { username } : null;
+}
+
+function removeStorageKey(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // A blocked storage area should not prevent the lesson from opening.
+    }
+}
+
+function getProfiles() {
+    const current = readJSON(PROFILES_KEY, null);
+    const candidates = Array.isArray(current) ? [...current] : [];
+
+    // Migrate only the learner name from the previous prototype. Obsolete
+    // account fields are intentionally ignored and then removed after a
+    // successful write. Existing progress keys continue to use the name.
+    const legacyList = readJSON(LEGACY_PROFILE_KEYS[1], []);
+    if (Array.isArray(legacyList)) {
+        candidates.push(...legacyList);
+    }
+    candidates.push(readJSON(LEGACY_PROFILE_KEYS[0], null));
+
+    const profiles = [];
+    const seen = new Set();
+
+    candidates.forEach(value => {
+        const profile = profileFromStored(value);
+        if (!profile) {
+            return;
+        }
+
+        const key = profile.username.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            profiles.push(profile);
+        }
+    });
+
+    const legacyExists = LEGACY_PROFILE_KEYS.some(key => {
+        try {
+            return localStorage.getItem(key) !== null;
+        } catch {
+            return false;
+        }
+    });
+
+    if (JSON.stringify(current) !== JSON.stringify(profiles) || legacyExists) {
+        if (writeJSON(PROFILES_KEY, profiles)) {
+            LEGACY_PROFILE_KEYS.forEach(removeStorageKey);
+        }
     }
 
-    return accounts;
+    return profiles;
+}
+
+// Keep the old function name available for any locally cached page code.
+function getAccounts() {
+    return getProfiles();
 }
 
 function defaultRecord() {
@@ -875,149 +930,77 @@ function closeRubric() {
    AUTHENTICATION
    ========================================================= */
 
-function showAuthForm(type) {
-    const login = type === "login";
-
-    $("#loginForm").hidden = !login;
-    $("#registerForm").hidden = login;
-
-    $("#loginTab").classList.toggle("active", login);
-    $("#registerTab").classList.toggle("active", !login);
-
-    $("#loginMessage").textContent = "";
-    $("#registerMessage").textContent = "";
-}
-
 function formMessage(id, message, type = "error") {
     const element = document.getElementById(id);
+
+    if (!element) {
+        return;
+    }
 
     element.textContent = message;
     element.className = `form-message ${type}`;
 }
 
-function togglePassword(id, button) {
-    const input = document.getElementById(id);
-    const show = input.type === "password";
+function renderProfileChoices() {
+    const list = $("#returningProfiles");
+    const buttons = $("#profileButtons");
 
-    input.type = show ? "text" : "password";
-    button.textContent = show ? "Hide" : "Show";
+    if (!list || !buttons) {
+        return;
+    }
 
-    button.setAttribute(
-        "aria-label",
-        show ? "Hide password" : "Show password"
-    );
+    const profiles = getProfiles();
+    buttons.replaceChildren();
+    list.hidden = profiles.length === 0;
+
+    profiles.forEach(profile => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary profile-choice";
+        button.textContent = `Continue as ${profile.username}`;
+        button.addEventListener("click", () => startLearner(profile.username));
+        buttons.append(button);
+    });
 }
 
-function handleRegister(event) {
-    event.preventDefault();
-
-    const username = $("#registerUsername").value.trim();
-    const confirmUsername = $("#confirmUsername").value.trim();
-
-    const password = $("#registerPassword").value;
-    const confirmPassword = $("#confirmPassword").value;
-
-    const gender = $("#gender").value;
-    const email = $("#personalEmail").value.trim();
-
-    if (username.length < 3) {
-        formMessage(
-            "registerMessage",
-            "Username must contain at least 3 characters."
-        );
-        return;
+function showAuthForm() {
+    const form = $("#profileForm");
+    if (form) {
+        form.hidden = false;
     }
-
-    if (username.toLowerCase() !== confirmUsername.toLowerCase()) {
-        formMessage("registerMessage", "Usernames do not match.");
-        return;
-    }
-
-    if (password.length < 6) {
-        formMessage(
-            "registerMessage",
-            "Password must contain at least 6 characters."
-        );
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        formMessage("registerMessage", "Passwords do not match.");
-        return;
-    }
-
-    const accounts = getAccounts();
-
-    if (
-        accounts.some(user =>
-            user.username.toLowerCase() === username.toLowerCase()
-        )
-    ) {
-        formMessage(
-            "registerMessage",
-            "This username is already registered on this browser."
-        );
-        return;
-    }
-
-    accounts.push({
-        username,
-        password,
-        gender,
-        email,
-        createdAt: new Date().toISOString()
-    });
-
-    if (!writeJSON(ACCOUNTS_KEY, accounts)) {
-        return;
-    }
-
-    $("#registerForm").reset();
-    $("#loginUsername").value = username;
-
-    showAuthForm("login");
-
-    formMessage(
-        "loginMessage",
-        "Account created. You can now log in.",
-        "success"
-    );
+    renderProfileChoices();
 }
 
-function handleLogin(event) {
-    event.preventDefault();
+function startLearner(name) {
+    const username = normalizeProfileName(name);
 
-    const username = $("#loginUsername").value.trim();
-    const password = $("#loginPassword").value;
-
-    const account = getAccounts().find(user =>
-        user.username.toLowerCase() === username.toLowerCase() &&
-        user.password === password
-    );
-
-    if (!account) {
+    if (!validProfileName(username)) {
         formMessage(
-            "loginMessage",
-            "Incorrect username or password."
+            "profileMessage",
+            "Use a nickname with 2–40 characters."
         );
         return;
     }
 
-    currentUser = account;
+    const profiles = getProfiles();
+    const existing = profiles.find(profile =>
+        profile.username.toLowerCase() === username.toLowerCase()
+    );
 
-    writeJSON(SESSION_KEY, {
-        username: account.username
-    });
+    if (!existing) {
+        profiles.push({ username });
+        writeJSON(PROFILES_KEY, profiles);
+    }
 
+    currentUser = existing || { username };
+    writeJSON(SESSION_KEY, { username: currentUser.username });
     loadProgress();
     openApplication();
 }
 
-function forgotPassword() {
-    formMessage(
-        "loginMessage",
-        "This browser-only prototype does not provide email password recovery. Ask your instructor for assistance or use another demo account."
-    );
+function handleProfileStart(event) {
+    event.preventDefault();
+    startLearner($("#profileName").value);
 }
 
 function openApplication() {
@@ -1040,6 +1023,9 @@ function logout() {
 
     currentUser = null;
     learning = {};
+    points = 0;
+    badges = 0;
+    completedModules = new Set();
     quizDrafts = {};
     sequenceDrafts = {};
     nextRound = null;
@@ -1048,8 +1034,12 @@ function logout() {
     $("#mainApplication").hidden = true;
     $("#authPage").hidden = false;
 
-    $("#loginPassword").value = "";
-    showAuthForm("login");
+    const form = $("#profileForm");
+    if (form) {
+        form.reset();
+    }
+    formMessage("profileMessage", "");
+    showAuthForm();
 }
 
 function restoreSession() {
@@ -1059,7 +1049,7 @@ function restoreSession() {
         return;
     }
 
-    const account = getAccounts().find(user =>
+    const account = getProfiles().find(user =>
         user.username.toLowerCase() === session.username.toLowerCase()
     );
 
