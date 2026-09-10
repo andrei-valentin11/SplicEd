@@ -3956,3 +3956,1413 @@ function initialize() {
 }
 
 initialize();
+/* SPLICED — INCLUSIVE PRACTICE AND GUIDED ORDER UPDATE */
+
+(() => {
+    "use strict";
+
+    if (window.splicedInclusiveUIInstalled) return;
+    window.splicedInclusiveUIInstalled = true;
+
+    const originalNavigate = window.navigate;
+    const originalProgress = window.renderProgress;
+    const esc = escapeHTML;
+    const count = index => rubricScore(index);
+
+    /*
+       MEMBER PHOTOS
+       Change these paths when adding the actual pictures.
+    */
+    const team = [
+        [
+            "Andrei N. Valentin",
+            "Leader",
+            "AV",
+            "images/andrei.jpg"
+        ],
+        [
+            "Chrizmhelo S. Santos",
+            "Member",
+            "CS",
+            "images/chrizmhelo.jpg"
+        ],
+        [
+            "John Joven C. Baguisa",
+            "Member",
+            "JB",
+            "images/john-joven.jpg"
+        ],
+        [
+            "Mark John G. Valenzuela",
+            "Member",
+            "MV",
+            "images/mark-john.jpg"
+        ],
+        [
+            "Neinard D. Ignacio",
+            "Member",
+            "NI",
+            "images/neinard.jpg"
+        ]
+    ];
+
+    const checklistItems = [
+        [
+            "safety",
+            "Safety",
+            "Use disconnected samples and follow the safety reminders."
+        ],
+        [
+            "preparation",
+            "Preparation",
+            "Prepare the conductor ends and the required tools."
+        ],
+        [
+            "sequence",
+            "Step order",
+            "Follow the procedure from the first step to the last."
+        ],
+        [
+            "technique",
+            "Technique",
+            "Position, bend, wrap, and trim as demonstrated."
+        ],
+        [
+            "inspection",
+            "Final check",
+            "Inspect the completed joint and its finishing method."
+        ]
+    ];
+
+    function focusOn(selector) {
+        const element = $(selector);
+
+        if (element) {
+            element.focus({ preventScroll: true });
+
+            element.scrollIntoView({
+                block: "nearest",
+                behavior: "auto"
+            });
+        }
+    }
+
+    /* NAVIGATION */
+
+    function navigate(page) {
+        originalNavigate(page);
+
+        if (currentPage !== page) return;
+
+        $$("nav button[data-page]").forEach(button => {
+            const active = button.dataset.page === page;
+
+            button.classList.toggle("active", active);
+
+            if (active) {
+                button.setAttribute("aria-current", "page");
+            } else {
+                button.removeAttribute("aria-current");
+            }
+        });
+
+        if (page === "practice") {
+            focusOn("#practiceStepTitle");
+        }
+
+        if (page === "nextPractice") {
+            focusOn("#guidedTitle");
+        }
+    }
+
+    function openGuidedOrder(index = selectedModule) {
+        if (nextRound?.module === index) {
+            selectedModule = index;
+            navigate("nextPractice");
+        } else {
+            startNextPractice(index);
+        }
+    }
+
+    /* PRACTICE CHECKS */
+
+    function requirementText() {
+        const record = recordFor(selectedModule);
+        const checked = record.completedSteps.includes(currentStep);
+
+        if (!record.safetyAccepted && !checked) {
+            return "Confirm the safety reminder above, then tick ‘I understand this step’.";
+        }
+
+        if (!record.safetyAccepted) {
+            return "Confirm the safety reminder above to continue.";
+        }
+
+        if (!checked) {
+            return "When you are ready, tick ‘I understand this step’ to continue.";
+        }
+
+        return currentStep === MODULES[selectedModule].steps.length - 1
+            ? "Ready? Try choosing the next step in Guided Order."
+            : "You can now move to the next step.";
+    }
+
+    function syncPractice() {
+        const record = recordFor(selectedModule);
+        const next = $("#practiceNext");
+
+        if (!next) return;
+
+        next.disabled =
+            !record.safetyAccepted ||
+            !record.completedSteps.includes(currentStep);
+
+        $("#practiceRequirement").textContent = requirementText();
+
+        $("#safetyStatus").textContent = record.safetyAccepted
+            ? "Confirmed"
+            : "Please confirm";
+
+        $("#practiceCheckedCount").textContent =
+            `${record.completedSteps.length} of ` +
+            `${MODULES[selectedModule].steps.length} steps checked`;
+
+        $("#practiceUnderstandingProgress").value =
+            record.completedSteps.length;
+    }
+
+    function acceptSafety(value) {
+        recordFor(selectedModule).safetyAccepted = Boolean(value);
+
+        saveProgress();
+        syncPractice();
+    }
+
+    function toggleStepComplete(value) {
+        const record = recordFor(selectedModule);
+
+        record.completedSteps = record.completedSteps.filter(
+            step => step !== currentStep
+        );
+
+        if (value) {
+            record.completedSteps.push(currentStep);
+        }
+
+        record.completedSteps.sort((a, b) => a - b);
+
+        saveProgress();
+        syncPractice();
+
+        const status = $(`#practiceStepStatus${currentStep}`);
+
+        if (status) {
+            status.textContent = value ? "Checked" : "Viewed";
+        }
+    }
+
+    /* SAVE OR REMOVE A DIFFICULT STEP */
+
+    function toggleSavedStep(index, step, button) {
+        const record = recordFor(index);
+        const saved = record.review.includes(step);
+
+        record.review = saved
+            ? record.review.filter(item => item !== step)
+            : [...record.review, step].sort((a, b) => a - b);
+
+        saveProgress();
+
+        button.textContent = saved
+            ? "Save Step for Review"
+            : "Saved — Remove from Review";
+
+        button.setAttribute("aria-pressed", String(!saved));
+
+        notify(
+            saved
+                ? "Step removed from My Review List."
+                : "Step saved. Find My Review List in Progress."
+        );
+    }
+
+    function savedStepButton(index, step) {
+        const saved = recordFor(index).review.includes(step);
+
+        return `
+            <button
+                type="button"
+                class="secondary"
+                aria-pressed="${saved}"
+                onclick="toggleSavedStep(${index}, ${step}, this)"
+            >
+                ${saved
+                    ? "Saved — Remove from Review"
+                    : "Save Step for Review"}
+            </button>
+        `;
+    }
+
+    /* PRACTICE PAGE */
+
+    function renderPractice() {
+        const module = MODULES[selectedModule];
+        const record = recordFor(selectedModule);
+
+        currentStep = Math.max(
+            0,
+            Math.min(currentStep, module.steps.length - 1)
+        );
+
+        const step = module.steps[currentStep];
+        const host = $("#practiceContent");
+
+        const sameModule =
+            host.dataset.module === String(selectedModule);
+
+        const openPanels = new Set(
+            sameModule
+                ? [
+                    ...host.querySelectorAll(
+                        "details[open][data-panel]"
+                    )
+                ].map(item => item.dataset.panel)
+                : []
+        );
+
+        const open = panel =>
+            openPanels.has(panel) ? "open" : "";
+
+        if (currentUser) {
+            if (!record.viewed.includes(currentStep)) {
+                record.viewed.push(currentStep);
+            }
+
+            record.lastStep = currentStep;
+            saveProgress();
+        }
+
+        const hint = currentStep
+            ? `Before this step: ${
+                module.steps[currentStep - 1][0]
+            }. ${module.steps[currentStep - 1][2]}`
+            : `Your goal: ${module.purpose}`;
+
+        const returnAction =
+            sequenceReturnModule === selectedModule
+                ? `
+                    <button
+                        type="button"
+                        class="secondary"
+                        onclick="returnToSequence()"
+                    >
+                        Return to My Sequence
+                    </button>
+                `
+                : nextRound?.module === selectedModule
+                    ? `
+                        <button
+                            type="button"
+                            class="secondary"
+                            onclick="resumeNextPractice()"
+                        >
+                            Return to Guided Order
+                        </button>
+                    `
+                    : "";
+
+        host.dataset.module = selectedModule;
+
+        host.innerHTML = `
+            <div class="study-topbar">
+                ${moduleSelect(
+                    "practiceModule",
+                    selectedModule,
+                    "selectPractice"
+                )}
+
+                ${returnAction}
+            </div>
+
+            <details
+                class="study-fold safety-fold"
+                data-panel="safety"
+                ${!record.safetyAccepted ? "open" : open("safety")}
+            >
+                <summary>
+                    Safety reminder
+
+                    <span id="safetyStatus" class="study-status">
+                        ${record.safetyAccepted
+                            ? "Confirmed"
+                            : "Please confirm"}
+                    </span>
+                </summary>
+
+                <div class="study-fold-body">
+                    <p>
+                        Use disconnected training wires, wear the
+                        required protective equipment, and follow
+                        your instructor. Never practise on a live circuit.
+                    </p>
+
+                    <label class="study-check">
+                        <input
+                            type="checkbox"
+                            onchange="acceptSafety(this.checked)"
+                            ${record.safetyAccepted ? "checked" : ""}
+                        >
+
+                        <span>
+                            I understand and will follow these
+                            safety reminders.
+                        </span>
+                    </label>
+                </div>
+            </details>
+
+            <article class="panel study-workbench">
+                <div class="study-position">
+                    <strong>
+                        Step ${currentStep + 1}
+                        of ${module.steps.length}
+                    </strong>
+
+                    <span id="practiceCheckedCount">
+                        ${record.completedSteps.length}
+                        of ${module.steps.length} steps checked
+                    </span>
+                </div>
+
+                <progress
+                    id="practiceUnderstandingProgress"
+                    max="${module.steps.length}"
+                    value="${record.completedSteps.length}"
+                    aria-label="Steps marked understood in this module"
+                ></progress>
+
+                <div class="study-columns">
+                    <div class="study-demonstration">
+                        <div class="wire-legend">
+                            <span class="wire-a">A: Main wire</span>
+
+                            <span class="wire-b">
+                                B: Second / branch wire
+                            </span>
+
+                            ${selectedModule === 7 ? `
+                                <span class="wire-c">
+                                    C: Second branch
+                                </span>
+                            ` : ""}
+                        </div>
+
+                        <div id="visualStage" class="visual-stage">
+                            ${wireDiagram(
+                                selectedModule,
+                                currentStep,
+                                true
+                            )}
+                        </div>
+
+                        <p class="study-caption">
+                            Training diagram. Turns and dimensions
+                            are illustrative.
+                        </p>
+
+                        <button
+                            type="button"
+                            class="secondary"
+                            onclick="replayVisual()"
+                        >
+                            Replay This Step
+                        </button>
+
+                        ${playbackTimer ? `
+                            <div class="study-autoplay" role="status">
+                                Auto-play is on.
+
+                                <button
+                                    type="button"
+                                    class="secondary"
+                                    onclick="togglePlayback()"
+                                >
+                                    Pause Auto-play
+                                </button>
+                            </div>
+                        ` : ""}
+
+                        <details
+                            class="study-fold"
+                            data-panel="tools"
+                            ${open("tools")}
+                        >
+                            <summary>More Visual Tools</summary>
+
+                            <div class="study-fold-body">
+                                <div class="study-tools">
+                                    <button
+                                        type="button"
+                                        id="pauseActionButton"
+                                        class="secondary"
+                                        aria-pressed="false"
+                                        onclick="pauseAction()"
+                                    >
+                                        Pause Action
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        id="zoomButton"
+                                        class="secondary"
+                                        aria-pressed="false"
+                                        onclick="toggleZoom()"
+                                    >
+                                        Close-up
+                                    </button>
+
+                                    <label
+                                        class="study-speed"
+                                        for="motionSpeed"
+                                    >
+                                        Animation speed
+
+                                        <select
+                                            id="motionSpeed"
+                                            onchange="setAnimationSpeed(
+                                                Number(this.value)
+                                            )"
+                                        >
+                                            ${[
+                                                [0.5, "Slow (0.5×)"],
+                                                [1, "Normal (1×)"],
+                                                [1.5, "Fast (1.5×)"]
+                                            ].map(([value, label]) => `
+                                                <option
+                                                    value="${value}"
+                                                    ${
+                                                        animationSpeed === value
+                                                            ? "selected"
+                                                            : ""
+                                                    }
+                                                >
+                                                    ${label}
+                                                </option>
+                                            `).join("")}
+                                        </select>
+                                    </label>
+
+                                    <button
+                                        type="button"
+                                        id="playStepsButton"
+                                        class="secondary"
+                                        aria-pressed="${
+                                            Boolean(playbackTimer)
+                                        }"
+                                        onclick="togglePlayback()"
+                                    >
+                                        ${playbackTimer
+                                            ? "Pause Auto-play"
+                                            : "Auto-play Steps"}
+                                    </button>
+                                </div>
+
+                                <p class="study-caption">
+                                    Auto-play moves through the steps
+                                    automatically. Pause whenever you
+                                    need more time.
+                                </p>
+                            </div>
+                        </details>
+
+                        <details
+                            class="study-fold"
+                            data-panel="compare"
+                            ${open("compare")}
+                        >
+                            <summary>Compare Before and After</summary>
+
+                            <div class="study-fold-body before-after">
+                                <figure>
+                                    <figcaption>Before this step</figcaption>
+
+                                    ${wireDiagram(
+                                        selectedModule,
+                                        currentStep - 1
+                                    )}
+                                </figure>
+
+                                <figure>
+                                    <figcaption>After this step</figcaption>
+
+                                    ${wireDiagram(
+                                        selectedModule,
+                                        currentStep
+                                    )}
+                                </figure>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="study-instruction">
+                        <h2 id="practiceStepTitle" tabindex="-1">
+                            ${esc(step[0])}
+                        </h2>
+
+                        <p>${esc(step[1])}</p>
+
+                        <aside class="note">
+                            <strong>Look for this</strong>
+                            <p>${esc(step[2])}</p>
+                        </aside>
+
+                        <details
+                            class="study-fold"
+                            data-panel="hint"
+                            ${open("hint")}
+                        >
+                            <summary>Show a Hint</summary>
+
+                            <div class="study-fold-body">
+                                <p>${esc(hint)}</p>
+                            </div>
+                        </details>
+
+                        <label class="study-check">
+                            <input
+                                type="checkbox"
+                                onchange="toggleStepComplete(this.checked)"
+                                ${
+                                    record.completedSteps.includes(currentStep)
+                                        ? "checked"
+                                        : ""
+                                }
+                            >
+
+                            <span>I understand this step.</span>
+                        </label>
+
+                        <div class="study-actions">
+                            <button
+                                type="button"
+                                class="secondary"
+                                onclick="previousStep()"
+                                ${currentStep === 0 ? "disabled" : ""}
+                            >
+                                Previous Step
+                            </button>
+
+                            <button
+                                type="button"
+                                id="practiceNext"
+                                class="primary"
+                                onclick="nextStep()"
+                                aria-describedby="practiceRequirement"
+                                ${
+                                    !record.safetyAccepted ||
+                                    !record.completedSteps.includes(currentStep)
+                                        ? "disabled"
+                                        : ""
+                                }
+                            >
+                                ${
+                                    currentStep === module.steps.length - 1
+                                        ? "Try Guided Order"
+                                        : "Next Step"
+                                }
+                            </button>
+                        </div>
+
+                        <p
+                            id="practiceRequirement"
+                            class="study-caption"
+                            role="status"
+                        >
+                            ${requirementText()}
+                        </p>
+
+                        <div class="study-review">
+                            ${savedStepButton(selectedModule, currentStep)}
+
+                            <p class="study-caption">
+                                Saved steps are in
+                                Progress → My Review List.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <details
+                class="study-fold"
+                data-panel="steps"
+                ${open("steps")}
+            >
+                <summary>All Steps in This Module</summary>
+
+                <div class="study-fold-body">
+                    <ol class="study-step-list">
+                        ${module.steps.map((item, index) => `
+                            <li>
+                                <button
+                                    type="button"
+                                    class="step-link"
+                                    ${
+                                        index === currentStep
+                                            ? 'aria-current="step"'
+                                            : ""
+                                    }
+                                    onclick="jumpStep(${index})"
+                                >
+                                    <span class="study-step-number">
+                                        ${index + 1}
+                                    </span>
+
+                                    <span>${esc(item[0])}</span>
+
+                                    <small id="practiceStepStatus${index}">
+                                        ${
+                                            record.completedSteps.includes(index)
+                                                ? "Checked"
+                                                : record.viewed.includes(index)
+                                                    ? "Viewed"
+                                                    : "Not viewed"
+                                        }
+                                    </small>
+                                </button>
+                            </li>
+                        `).join("")}
+                    </ol>
+                </div>
+            </details>
+
+            <details
+                class="study-fold"
+                data-panel="resources"
+                ${open("resources")}
+            >
+                <summary>Lesson, Tutorial and More Practice</summary>
+
+                <div class="study-fold-body">
+                    <div class="study-actions">
+                        <button
+                            type="button"
+                            class="secondary"
+                            onclick="openLesson(${selectedModule})"
+                        >
+                            Read the Lesson
+                        </button>
+
+                        <button
+                            type="button"
+                            class="secondary"
+                            onclick="openGuidedOrder(${selectedModule})"
+                        >
+                            What Comes Next?
+                        </button>
+                    </div>
+
+                    ${tutorialCard(selectedModule, true)}
+                </div>
+            </details>
+        `;
+
+        $("#visualStage").style.setProperty(
+            "--motion-duration",
+            `${3 / animationSpeed}s`
+        );
+
+        zoomed = false;
+    }
+
+    function jumpStep(step) {
+        if (!MODULES[selectedModule].steps[step]) return;
+
+        stopPlayback();
+
+        currentStep = step;
+
+        renderPractice();
+        focusOn("#practiceStepTitle");
+    }
+
+    function nextStep() {
+        stopPlayback();
+
+        const record = recordFor(selectedModule);
+
+        if (
+            !record.safetyAccepted ||
+            !record.completedSteps.includes(currentStep)
+        ) {
+            syncPractice();
+            return;
+        }
+
+        if (currentStep < MODULES[selectedModule].steps.length - 1) {
+            jumpStep(currentStep + 1);
+        } else {
+            openGuidedOrder(selectedModule);
+        }
+    }
+
+    /*
+       Keep the existing auto-play engine and update
+       the visible pause control when it stops.
+    */
+    const originalStopPlayback = window.stopPlayback;
+
+    function stopPlayback() {
+        originalStopPlayback();
+        $(".study-autoplay")?.remove();
+    }
+
+    /* GUIDED ORDER */
+
+    function prepareNextQuestion() {
+        if (!nextRound) return;
+
+        const round = nextRound;
+        const target = round.index + 1;
+
+        if (target >= MODULES[round.module].steps.length) return;
+
+        const others = MODULES[round.module].steps
+            .map((_, index) => index)
+            .filter(index =>
+                index !== target &&
+                index !== round.index
+            );
+
+        round.choices = shuffle([
+            target,
+            ...shuffle(others).slice(0, 2)
+        ]);
+
+        round.choice = null;
+        round.solved = false;
+        round.tries = 0;
+        round.message = "";
+        round.resultType = "";
+    }
+
+    function renderNextPractice() {
+        if (!nextRound) {
+            startNextPractice(selectedModule);
+            return;
+        }
+
+        const round = nextRound;
+        const module = MODULES[round.module];
+        const total = module.steps.length - 1;
+        const host = $("#nextPracticeContent");
+
+        const selector = moduleSelect(
+            "guidedModule",
+            round.module,
+            "openGuidedOrder"
+        );
+
+        if (round.index >= total) {
+            host.innerHTML = `
+                ${selector}
+
+                <article class="panel study-finish">
+                    <h2 id="guidedTitle" tabindex="-1">
+                        Guided Order Complete
+                    </h2>
+
+                    <p>${esc(module.name)}</p>
+
+                    <p>
+                        You answered all ${total} questions.
+                        Next, try arranging all the steps in order.
+                    </p>
+
+                    <div class="study-actions">
+                        <button
+                            type="button"
+                            class="primary"
+                            onclick="startSequencingChallenge(
+                                ${round.module},
+                                true
+                            )"
+                        >
+                            Arrange All Steps
+                        </button>
+
+                        <button
+                            type="button"
+                            class="secondary"
+                            onclick="startNextPractice(${round.module})"
+                        >
+                            Practise Again
+                        </button>
+                    </div>
+
+                    <p class="study-caption">
+                        This guided activity is recorded separately
+                        from your module assessment.
+                    </p>
+                </article>
+            `;
+
+            return;
+        }
+
+        const current = module.steps[round.index];
+        const completed = round.index + (round.solved ? 1 : 0);
+
+        host.innerHTML = `
+            ${selector}
+
+            <article class="panel study-workbench">
+                <div class="study-position">
+                    <strong>
+                        Question ${round.index + 1} of ${total}
+                    </strong>
+
+                    <span>
+                        ${completed} of ${total}
+                        answered correctly this round
+                    </span>
+                </div>
+
+                <progress
+                    max="${total}"
+                    value="${completed}"
+                    aria-label="Guided questions completed this round"
+                ></progress>
+
+                <div class="study-columns guided-columns">
+                    <div class="study-current">
+                        <span class="eyebrow">
+                            CURRENT STEP ${round.index + 1}
+                        </span>
+
+                        <h2 id="guidedTitle" tabindex="-1">
+                            ${esc(current[0])}
+                        </h2>
+
+                        <figure>
+                            ${wireDiagram(round.module, round.index)}
+
+                            <figcaption>
+                                ${esc(current[2])}
+                            </figcaption>
+                        </figure>
+
+                        <p>${esc(current[1])}</p>
+                    </div>
+
+                    <div class="study-question">
+                        <fieldset
+                            class="guided-answers"
+                            aria-describedby="guidedInstruction"
+                        >
+                            <legend>What comes next?</legend>
+
+                            <p id="guidedInstruction">
+                                Select one answer, then choose
+                                Check Answer.
+                            </p>
+
+                            ${round.choices.map((choice, index) => `
+                                <label
+                                    class="guided-option ${
+                                        round.choice === choice
+                                            ? "is-selected"
+                                            : ""
+                                    }"
+                                >
+                                    <input
+                                        type="radio"
+                                        name="guidedAnswer"
+                                        value="${choice}"
+                                        onchange="chooseGuidedAnswer(${choice})"
+                                        ${
+                                            round.choice === choice
+                                                ? "checked"
+                                                : ""
+                                        }
+                                        ${round.solved ? "disabled" : ""}
+                                    >
+
+                                    <span>
+                                        <strong>
+                                            ${String.fromCharCode(65 + index)}.
+                                        </strong>
+
+                                        ${esc(module.steps[choice][0])}
+
+                                        ${
+                                            round.solved &&
+                                            round.choice === choice
+                                                ? "<small>Correct answer</small>"
+                                                : ""
+                                        }
+                                    </span>
+                                </label>
+                            `).join("")}
+                        </fieldset>
+
+                        <div
+                            id="nextFeedback"
+                            class="feedback ${round.resultType}"
+                            role="status"
+                            tabindex="-1"
+                            ${round.message ? "" : "hidden"}
+                        >
+                            ${round.message}
+                        </div>
+
+                        <div class="study-actions guided-primary">
+                            ${round.solved ? `
+                                <button
+                                    type="button"
+                                    class="primary"
+                                    onclick="advanceNextQuestion()"
+                                >
+                                    ${round.index === total - 1
+                                        ? "Finish Guided Order"
+                                        : "Next Question"}
+                                </button>
+                            ` : `
+                                <button
+                                    type="button"
+                                    id="checkGuidedAnswer"
+                                    class="primary"
+                                    onclick="checkGuidedAnswer()"
+                                    aria-describedby="guidedActionHint"
+                                    ${
+                                        Number.isInteger(round.choice)
+                                            ? ""
+                                            : "disabled"
+                                    }
+                                >
+                                    Check Answer
+                                </button>
+                            `}
+                        </div>
+
+                        <p
+                            id="guidedActionHint"
+                            class="study-caption"
+                            role="status"
+                        >
+                            ${
+                                round.solved
+                                    ? "Continue when you are ready."
+                                    : Number.isInteger(round.choice)
+                                        ? "Your answer is selected. Choose Check Answer when ready."
+                                        : "Select an answer to enable Check Answer."
+                            }
+                        </p>
+
+                        <details class="study-fold">
+                            <summary>Need Help with This Step?</summary>
+
+                            <div class="study-fold-body">
+                                <div class="study-actions">
+                                    <button
+                                        type="button"
+                                        class="secondary"
+                                        onclick="reviewGuidedStep(${round.index})"
+                                    >
+                                        Review Current Step
+                                    </button>
+
+                                    ${savedStepButton(
+                                        round.module,
+                                        round.index
+                                    )}
+                                </div>
+
+                                <p class="study-caption">
+                                    You can return to this question
+                                    after reviewing.
+                                </p>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
+    function chooseGuidedAnswer(choice) {
+        if (
+            !nextRound ||
+            nextRound.solved ||
+            !nextRound.choices.includes(choice)
+        ) {
+            return;
+        }
+
+        nextRound.choice = choice;
+        nextRound.message = "";
+        nextRound.resultType = "";
+
+        $$(".guided-option").forEach(label => {
+            const value = Number(
+                label.querySelector("input").value
+            );
+
+            label.classList.toggle(
+                "is-selected",
+                value === choice
+            );
+        });
+
+        $("#nextFeedback").hidden = true;
+        $("#checkGuidedAnswer").disabled = false;
+
+        $("#guidedActionHint").textContent =
+            "Your answer is selected. Choose Check Answer when ready.";
+    }
+
+    function checkGuidedAnswer() {
+        if (Number.isInteger(nextRound?.choice)) {
+            answerNextStep(nextRound.choice);
+        }
+    }
+
+    function answerNextStep(choice) {
+        if (
+            !nextRound ||
+            nextRound.solved ||
+            !nextRound.choices.includes(choice)
+        ) {
+            return;
+        }
+
+        const round = nextRound;
+        const module = MODULES[round.module];
+        const target = round.index + 1;
+
+        round.choice = choice;
+        round.tries++;
+
+        if (choice === target) {
+            round.solved = true;
+            round.resultType = "success";
+
+            const record = recordFor(round.module);
+
+            if (!record.nextSolved.includes(target)) {
+                record.nextSolved.push(target);
+            }
+
+            round.message = `
+                <strong>
+                    Correct — ${esc(module.steps[target][0])}
+                </strong>
+
+                <p>${esc(module.steps[target][1])}</p>
+            `;
+
+            saveProgress();
+        } else {
+            round.resultType = "warning";
+
+            round.message = `
+                <strong>Not yet — try another answer.</strong>
+
+                <p>
+                    “${esc(module.steps[choice][0])}”
+                    is step ${choice + 1}.
+
+                    You need the step after
+                    “${esc(module.steps[round.index][0])}”.
+                </p>
+
+                <p>
+                    <strong>Hint:</strong>
+                    ${esc(module.steps[target][2])}
+                </p>
+
+                <div class="study-actions">
+                    <button
+                        type="button"
+                        class="secondary"
+                        onclick="reviewGuidedStep(${target})"
+                    >
+                        Review Related Step
+                    </button>
+
+                    ${savedStepButton(round.module, target)}
+                </div>
+            `;
+        }
+
+        renderNextPractice();
+        focusOn("#nextFeedback");
+    }
+
+    function advanceNextQuestion() {
+        if (!nextRound?.solved) return;
+
+        nextRound.index++;
+
+        prepareNextQuestion();
+        renderNextPractice();
+
+        focusOn("#guidedTitle");
+    }
+
+    function reviewGuidedStep(step) {
+        if (
+            !nextRound ||
+            !MODULES[nextRound.module].steps[step]
+        ) {
+            return;
+        }
+
+        selectedModule = nextRound.module;
+        currentStep = step;
+        sequenceReturnModule = null;
+
+        navigate("practice");
+    }
+
+    /* PROGRESS — PRACTICAL CHECKLIST */
+
+    function renderProgress() {
+        originalProgress();
+
+        $$("#progressContent th").forEach(cell => {
+            if (cell.textContent.trim() === "Practical Rubric") {
+                cell.textContent = "Practical Checklist";
+            }
+        });
+
+        $$(
+            '#progressContent button[onclick^="openRubric("]'
+        ).forEach((button, index) => {
+            button.id = `openChecklist${index}`;
+
+            button.textContent =
+                `Open Checklist · ${count(index)}/5 checked`;
+
+            button.setAttribute(
+                "aria-label",
+                `Practical checklist for ${MODULES[index].name}: ` +
+                `${count(index)} of 5 items checked`
+            );
+        });
+    }
+
+    function openRubric(index) {
+        if (!MODULES[index]) return;
+
+        const dialog = $("#rubricModal");
+        const saved = recordFor(index).rubric || {};
+
+        dialog.innerHTML = `
+            <form
+                onsubmit="event.preventDefault();saveRubric(${index})"
+            >
+                <h2 id="checklistTitle">Practical Checklist</h2>
+
+                <p>
+                    <strong>${esc(MODULES[index].name)}</strong>
+                </p>
+
+                <p id="checklistDescription">
+                    Tick the items you have checked during practical work.
+                    Use this for self-review or together with your instructor.
+                </p>
+
+                <fieldset class="checklist-items">
+                    <legend>Practical work checks</legend>
+
+                    ${checklistItems.map(
+                        ([key, title, description]) => `
+                            <label class="study-check">
+                                <input
+                                    type="checkbox"
+                                    data-rubric="${key}"
+                                    onchange="updateChecklistCount()"
+                                    ${saved[key] ? "checked" : ""}
+                                >
+
+                                <span>
+                                    <strong>${title}</strong>
+                                    <br>
+                                    ${description}
+                                </span>
+                            </label>
+                        `
+                    ).join("")}
+                </fieldset>
+
+                <p id="checklistCount" role="status">
+                    ${count(index)} of 5 items checked.
+                </p>
+
+                <div class="study-actions">
+                    <button type="submit" class="primary">
+                        Save Checklist
+                    </button>
+
+                    <button
+                        type="button"
+                        class="secondary"
+                        onclick="closeRubric()"
+                    >
+                        Cancel
+                    </button>
+                </div>
+
+                <p class="study-caption">
+                    This checklist does not change your assessment score.
+                </p>
+            </form>
+        `;
+
+        dialog.showModal();
+    }
+
+    function updateChecklistCount() {
+        $("#checklistCount").textContent =
+            `${$$("#rubricModal input:checked").length} ` +
+            "of 5 items checked.";
+    }
+
+    function saveRubric(index) {
+        const saved = {};
+
+        $$("#rubricModal [data-rubric]").forEach(input => {
+            saved[input.dataset.rubric] = input.checked;
+        });
+
+        /*
+           Keep the existing storage key so previously
+           saved checkmarks remain available.
+        */
+        recordFor(index).rubric = saved;
+
+        saveProgress();
+        closeRubric();
+        renderProgress();
+
+        focusOn(`#openChecklist${index}`);
+
+        notify(
+            `Practical checklist saved: ${count(index)} of 5 items checked.`
+        );
+    }
+
+    function closeRubric() {
+        $("#rubricModal").close();
+    }
+
+    /* CONNECT THE UPDATED FUNCTIONS */
+
+    Object.assign(window, {
+        navigate,
+        openGuidedOrder,
+        renderPractice,
+        acceptSafety,
+        toggleStepComplete,
+        toggleSavedStep,
+        jumpStep,
+        nextStep,
+        stopPlayback,
+        prepareNextQuestion,
+        renderNextPractice,
+        chooseGuidedAnswer,
+        checkGuidedAnswer,
+        answerNextStep,
+        advanceNextQuestion,
+        reviewGuidedStep,
+        renderProgress,
+        openRubric,
+        saveRubric,
+        closeRubric,
+        updateChecklistCount
+    });
+
+    /*
+       Give Guided Order its own navigation highlight.
+       Clicking it resumes an existing round.
+    */
+    const guidedNav = $$("nav button").find(
+        button => button.textContent.trim() === "Guided Order"
+    );
+
+    if (guidedNav) {
+        guidedNav.dataset.page = "nextPractice";
+
+        guidedNav.setAttribute(
+            "onclick",
+            "openGuidedOrder(selectedModule)"
+        );
+    }
+
+    /* SIMPLER PAGE INTRODUCTIONS */
+
+    $("#practice .section-heading h1").textContent =
+        "Step-by-Step Practice";
+
+    $("#practice .section-heading p").textContent =
+        "Study the diagram, read the instruction, then move to the next step at your own pace.";
+
+    $("#nextPractice .section-heading p").textContent =
+        "Choose which step comes next. You can review and try again whenever you need to.";
+
+    $("#practice").classList.add("study-page");
+    $("#nextPractice").classList.add("study-page");
+
+    /*
+       Native dialog: keyboard focus stays inside
+       while open, and Escape closes it.
+    */
+    const dialog = document.createElement("dialog");
+
+    dialog.id = "rubricModal";
+    dialog.className = "practical-checklist-dialog";
+
+    dialog.setAttribute("aria-labelledby", "checklistTitle");
+    dialog.setAttribute("aria-describedby", "checklistDescription");
+
+    $("#rubricModal").replaceWith(dialog);
+
+    /* ABOUT US — MEMBER PICTURE SLOTS */
+
+    $("#about .team-grid").innerHTML = team.map(
+        ([name, role, initials, path]) => `
+            <article
+                class="team-card ${
+                    role === "Leader" ? "leader-card" : ""
+                }"
+            >
+                <div class="team-photo">
+                    <span aria-hidden="true">${initials}</span>
+
+                    <img
+                        src="${esc(path)}"
+                        alt="${esc(name)}"
+                        width="160"
+                        height="160"
+                        loading="lazy"
+                        decoding="async"
+                        onerror="this.hidden=true"
+                    >
+                </div>
+
+                <span class="eyebrow">${role}</span>
+                <h3>${esc(name)}</h3>
+            </article>
+        `
+    ).join("");
+
+    /* REFRESH AN OPEN LEARNING PAGE */
+
+    if (
+        currentUser &&
+        ["practice", "nextPractice", "progress"].includes(currentPage)
+    ) {
+        navigate(currentPage);
+    }
+})();
