@@ -392,6 +392,32 @@ label {
     margin-bottom: 0.5rem;
 }
 
+.profile-form {
+    margin-top: 1.35rem;
+}
+
+.profile-list {
+    border-top: 1px solid var(--border);
+    margin-top: 1.4rem;
+    padding-top: 1.1rem;
+}
+
+.profile-list > p {
+    margin-bottom: 0.65rem;
+}
+
+.profile-buttons {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.profile-choice {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 48px;
+    text-align: left;
+}
+
 .auth-tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -421,26 +447,6 @@ label {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0 0.8rem;
-}
-
-.password-field {
-    display: flex;
-    border: 1px solid var(--border-strong);
-    border-radius: 9px;
-    overflow: hidden;
-    background: #202629;
-}
-
-.password-field input {
-    border: 0;
-    min-width: 0;
-}
-
-.password-toggle {
-    border: 0;
-    color: var(--copper);
-    background: transparent;
-    padding: 0 0.9rem;
 }
 
 .form-message {
