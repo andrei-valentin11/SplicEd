@@ -1628,4 +1628,468 @@ progress {
         transition: none !important;
         scroll-behavior: auto !important;
     }
+}/* SPLICED — SIMPLIFIED LEARNING INTERFACE */
+
+.study-page .section-heading {
+    margin-bottom: 1.25rem;
+}
+
+.study-page .section-heading h1 {
+    font-size: clamp(1.65rem, 3vw, 2.2rem);
+}
+
+.study-page .section-heading p {
+    max-width: 65ch;
+}
+
+.study-topbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.study-topbar .module-select {
+    flex: 1 1 20rem;
+}
+
+.study-page .module-select {
+    margin: 0 0 1rem;
+}
+
+.study-page .module-select select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.study-page button,
+.study-page select {
+    min-height: 48px;
+    white-space: normal;
+}
+
+.study-page button {
+    overflow-wrap: anywhere;
+}
+
+.study-workbench {
+    margin: 1rem 0;
+}
+
+.study-position {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    flex-wrap: wrap;
+}
+
+.study-position span {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.study-workbench > progress {
+    display: block;
+    width: 100%;
+    height: 0.55rem;
+    margin: 0.8rem 0 1.5rem;
+}
+
+.study-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 1.75rem;
+}
+
+.study-columns > * {
+    min-width: 0;
+}
+
+.study-instruction > p {
+    max-width: 60ch;
+}
+
+.study-instruction h2,
+.study-current h2 {
+    font-size: 1.45rem;
+    line-height: 1.4;
+}
+
+.study-caption {
+    margin: 0.6rem 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.study-fold {
+    margin: 0.85rem 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-soft);
+}
+
+.study-fold > summary {
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.6;
+}
+
+.study-fold > summary:hover {
+    background: var(--surface-raised);
+    border-radius: 10px;
+}
+
+.study-fold > summary::marker {
+    color: var(--copper);
+}
+
+.study-fold-body {
+    padding: 0.2rem 1rem 1rem;
+}
+
+.study-fold-body > :last-child {
+    margin-bottom: 0;
+}
+
+.study-status {
+    color: var(--copper);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+}
+
+.safety-fold {
+    border-left: 3px solid var(--copper);
+}
+
+.study-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-soft);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.study-check input,
+.guided-option input {
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    min-height: 0;
+    margin: 0.25rem 0 0;
+    accent-color: var(--copper);
+}
+
+.study-check:focus-within,
+.guided-option:focus-within {
+    outline: 3px solid var(--copper);
+    outline-offset: 3px;
+}
+
+.study-check input:focus-visible,
+.guided-option input:focus-visible {
+    outline-offset: 1px;
+}
+
+.study-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1rem 0 0;
+}
+
+.study-actions > button {
+    flex: 1 1 10rem;
+    min-width: 0;
+    min-height: 48px;
+}
+
+.study-review {
+    border-top: 1px solid var(--border);
+    margin-top: 1.3rem;
+    padding-top: 1rem;
+}
+
+.study-review > button {
+    width: 100%;
+}
+
+.study-tools {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+}
+
+.study-speed {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.study-speed select {
+    flex: 1;
+    min-width: 9rem;
+}
+
+.study-autoplay {
+    margin-top: 0.8rem;
+    padding: 0.75rem;
+    border: 1px solid var(--copper);
+    border-radius: 8px;
+}
+
+.study-autoplay button {
+    margin: 0.5rem 0 0;
+    display: block;
+}
+
+.study-step-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.study-step-list .step-link {
+    color: var(--text);
+    display: grid;
+    grid-template-columns: 2rem 1fr auto;
+    gap: 0.6rem;
+}
+
+.study-step-list .step-link[aria-current="step"] {
+    background: var(--copper-soft);
+    border-color: var(--copper);
+}
+
+.study-step-list .step-link span {
+    min-width: 0;
+}
+
+.study-step-list .step-link small {
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.study-step-number {
+    color: var(--copper);
+}
+
+.guided-answers {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.guided-answers legend {
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 0;
+    margin-bottom: 0.7rem;
+}
+
+.guided-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 1rem;
+    margin: 0.7rem 0;
+    min-height: 56px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-soft);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.guided-option:hover {
+    background: var(--surface-raised);
+}
+
+.guided-option.is-selected {
+    border-color: var(--copper);
+    background: var(--copper-soft);
+}
+
+.guided-option small {
+    display: block;
+    margin-top: 0.3rem;
+    color: var(--success);
+    font-size: 0.9rem;
+}
+
+.study-question .feedback {
+    margin-top: 1rem;
+}
+
+.guided-primary > button {
+    width: 100%;
+}
+
+.study-current figure {
+    margin: 0.75rem 0 1rem;
+}
+
+.study-finish {
+    max-width: 48rem;
+}
+
+.study-page [tabindex="-1"]:focus-visible {
+    outline: 3px solid var(--copper);
+    outline-offset: 5px;
+}
+
+.study-page .before-after figure {
+    margin: 0.5rem 0;
+    min-width: 0;
+}
+
+/* PRACTICAL CHECKLIST */
+
+.practical-checklist-dialog {
+    width: min(38rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    overflow: auto;
+    margin: auto;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.practical-checklist-dialog::backdrop {
+    background: rgb(0 0 0 / 65%);
+}
+
+.practical-checklist-dialog .checklist-items {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    min-width: 0;
+}
+
+.checklist-items legend {
+    font-size: 1rem;
+    color: var(--muted);
+}
+
+.practical-checklist-dialog .study-check {
+    line-height: 1.7;
+}
+
+/* ABOUT US — MEMBER PHOTOS */
+
+.team-card .team-photo {
+    width: 144px;
+    height: 144px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    margin: 0 0 1.2rem;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    background: var(--surface-raised);
+}
+
+.team-photo > span {
+    color: var(--copper);
+    font-size: 2.4rem;
+    font-weight: 700;
+}
+
+.team-photo > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* RESPONSIVE LAYOUT */
+
+@media (max-width: 900px) {
+    .study-columns {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    .study-demonstration .visual-stage {
+        max-width: 34rem;
+        margin-inline: auto;
+    }
+
+    .study-current figure {
+        max-width: 30rem;
+    }
+}
+
+@media (max-width: 560px) {
+    .study-workbench {
+        padding: 1rem;
+    }
+
+    .study-position > * {
+        width: 100%;
+    }
+
+    .study-actions > button {
+        flex-basis: 100%;
+    }
+
+    .study-tools {
+        grid-template-columns: 1fr;
+    }
+
+    .study-step-list .step-link {
+        grid-template-columns: 1.5rem 1fr;
+    }
+
+    .study-step-list .step-link small {
+        grid-column: 2;
+    }
+
+    .study-fold > summary {
+        padding: 0.85rem;
+    }
+
+    .study-status {
+        display: block;
+        margin-left: 1rem;
+    }
+
+    .study-fold-body {
+        padding-inline: 0.85rem;
+    }
+
+    .study-page .before-after {
+        grid-template-columns: 1fr;
+    }
+
+    .practical-checklist-dialog {
+        padding: 1rem;
+    }
+}
+
+@media (forced-colors: active) {
+    .guided-option.is-selected,
+    .study-step-list .step-link[aria-current="step"] {
+        border: 3px solid Highlight;
+    }
 }
