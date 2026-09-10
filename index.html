@@ -18,7 +18,7 @@
 
 <body>
 
-    <!-- AUTHENTICATION -->
+    <!-- LEARNER START -->
 
     <main id="authPage" class="auth-page">
         <section class="auth-intro">
@@ -65,153 +65,38 @@
         </section>
 
         <section class="auth-card">
-            <span class="eyebrow">LEARNER ACCESS</span>
+            <span class="eyebrow">LEARNER START</span>
             <h2>Welcome to SplicEd</h2>
 
             <p class="muted">
-                Sign in to continue your saved learning progress.
+                Enter a nickname to open your lessons and continue progress saved on this browser.
             </p>
 
-            <div class="auth-tabs">
-                <button
-                    id="loginTab"
-                    class="auth-tab active"
-                    type="button"
-                    onclick="showAuthForm('login')"
+            <form id="profileForm" class="profile-form" onsubmit="handleProfileStart(event)">
+                <label for="profileName">Learner nickname</label>
+                <input
+                    id="profileName"
+                    name="profileName"
+                    autocomplete="nickname"
+                    maxlength="40"
+                    placeholder="e.g., Andrei"
+                    required
                 >
-                    Log In
+
+                <button class="primary full-width" type="submit">
+                    Start Learning →
                 </button>
 
-                <button
-                    id="registerTab"
-                    class="auth-tab"
-                    type="button"
-                    onclick="showAuthForm('register')"
-                >
-                    Register
-                </button>
+                <p id="profileMessage" class="form-message" role="status" aria-live="polite"></p>
+            </form>
+
+            <div id="returningProfiles" class="profile-list" hidden>
+                <p class="small-text">Saved learner profiles on this browser</p>
+                <div id="profileButtons" class="profile-buttons"></div>
             </div>
 
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <label for="loginUsername">Username</label>
-                <input
-                    id="loginUsername"
-                    name="username"
-                    autocomplete="username"
-                    required
-                >
-
-                <label for="loginPassword">Password</label>
-
-                <div class="password-field">
-                    <input
-                        id="loginPassword"
-                        name="password"
-                        type="password"
-                        autocomplete="current-password"
-                        required
-                    >
-
-                    <button
-                        class="password-toggle"
-                        type="button"
-                        aria-label="Show password"
-                        onclick="togglePassword('loginPassword', this)"
-                    >
-                        Show
-                    </button>
-                </div>
-
-                <button
-                    class="text-button"
-                    type="button"
-                    onclick="forgotPassword()"
-                >
-                    Forgot password?
-                </button>
-
-                <button class="primary full-width" type="submit">
-                    Log In →
-                </button>
-
-                <p id="loginMessage" class="form-message" role="status"></p>
-            </form>
-
-            <form
-                id="registerForm"
-                onsubmit="handleRegister(event)"
-                hidden
-            >
-                <div class="form-grid">
-                    <div>
-                        <label for="registerUsername">Preferred username</label>
-                        <input
-                            id="registerUsername"
-                            autocomplete="username"
-                            minlength="3"
-                            required
-                        >
-                    </div>
-
-                    <div>
-                        <label for="confirmUsername">Confirm username</label>
-                        <input
-                            id="confirmUsername"
-                            autocomplete="off"
-                            required
-                        >
-                    </div>
-
-                    <div>
-                        <label for="registerPassword">Preferred password</label>
-                        <input
-                            id="registerPassword"
-                            type="password"
-                            autocomplete="new-password"
-                            minlength="6"
-                            required
-                        >
-                    </div>
-
-                    <div>
-                        <label for="confirmPassword">Confirm password</label>
-                        <input
-                            id="confirmPassword"
-                            type="password"
-                            autocomplete="new-password"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <label for="gender">Gender</label>
-                <select id="gender" required>
-                    <option value="">Select an option</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Non-binary</option>
-                    <option>Prefer to self-describe</option>
-                    <option>Prefer not to say</option>
-                </select>
-
-                <label for="personalEmail">Personal email</label>
-                <input
-                    id="personalEmail"
-                    type="email"
-                    autocomplete="email"
-                    required
-                >
-
-                <button class="primary full-width" type="submit">
-                    Create Account →
-                </button>
-
-                <p id="registerMessage" class="form-message" role="status"></p>
-            </form>
-
             <p class="small-text auth-note">
-                Browser-only learning prototype. Use a demo password.
-                Accounts and progress are stored on this browser.
+                SplicEd asks only for a nickname. Your nickname and learning progress stay in this browser; no password or personal email is needed.
             </p>
         </section>
     </main>
@@ -268,7 +153,7 @@
             <div class="account-menu">
                 <span id="userLabel"></span>
                 <button class="secondary small-button" onclick="logout()">
-                    Log Out
+                    Change Learner
                 </button>
             </div>
         </header>
