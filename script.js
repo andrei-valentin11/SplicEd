@@ -3969,7 +3969,7 @@ initialize();
 
     // Change these paths when you add the actual member photographs.
     const team = [
-        ["Andrei N. Valentin", "Leader", "AV", "images/andrei.jpg"],
+        ["Andrei N. Valentin", "Leader", "AV", "images/andrei.png"],
         ["Chrizmhelo S. Santos", "Member", "CS", "images/chrizmhelo.jpg"],
         ["John Joven C. Baguisa", "Member", "JB", "images/john-joven.jpg"],
         ["Mark John G. Valenzuela", "Member", "MV", "images/mark-john.jpg"],
